@@ -2,46 +2,51 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
+import { Input } from "@/components/ui/input"
 import { LevelSelector } from "@/components/LevelSelector"
 import { ExplanationCard } from "@/components/ExplanationCard"
-
-function getPromptForLevel(level: string, text: string) {
-  const prompts = {
-    "im-5": `Explain the following text like I'm a 5-year-old. Use simple words, analogies, and examples. Avoid jargon. Text: ${text}`,
-    "high-school": `Explain the following text to a high school student. Use age-appropriate examples and some basic technical terms. Text: ${text}`,
-    "manager": `Explain the following text to a non-technical manager. Be concise, use real-world analogies, and skip code-heavy details. Text: ${text}`,
-    "smart-newbie": `Explain the following text to someone who's intelligent but new to this topic. Provide proper context while maintaining technical accuracy. Text: ${text}`
-  }
-  return prompts[level as keyof typeof prompts] || prompts["im-5"]
-}
+import { toast } from "@/components/ui/sonner"
+import { getSimplifiedExplanation } from "@/utils/geminiService"
 
 export default function Index() {
   const [selectedLevel, setSelectedLevel] = useState("im-5")
   const [inputText, setInputText] = useState("")
   const [explanation, setExplanation] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [apiKey, setApiKey] = useState(localStorage.getItem('geminiApiKey') || '')
+
+  const handleSaveApiKey = () => {
+    if (apiKey.trim()) {
+      localStorage.setItem('geminiApiKey', apiKey.trim())
+      toast.success("API Key saved successfully!")
+    } else {
+      toast.error("Please enter a valid API key")
+    }
+  }
 
   const handleExplain = async () => {
     if (!inputText.trim()) return
+    if (!localStorage.getItem('geminiApiKey')) {
+      toast.error("Please save your Gemini API key first")
+      return
+    }
 
     setIsLoading(true)
     try {
-      // TODO: Replace with actual API call
-      // For now, just mock the response
-      const mockResponse = "This is a simplified explanation of " + inputText
-      setExplanation(mockResponse)
+      const simplifiedExplanation = await getSimplifiedExplanation(inputText, selectedLevel)
+      setExplanation(simplifiedExplanation)
       
       // Save to localStorage
       const history = JSON.parse(localStorage.getItem("explanationHistory") || "[]")
       history.unshift({
         text: inputText,
-        explanation: mockResponse,
+        explanation: simplifiedExplanation,
         level: selectedLevel,
         timestamp: new Date().toISOString()
       })
       localStorage.setItem("explanationHistory", JSON.stringify(history.slice(0, 10)))
     } catch (error) {
-      console.error("Failed to get explanation:", error)
+      toast.error(error instanceof Error ? error.message : "An error occurred")
     } finally {
       setIsLoading(false)
     }
@@ -60,6 +65,16 @@ export default function Index() {
         </div>
 
         <div className="space-y-8">
+          <div className="flex items-center space-x-4 mb-6">
+            <Input 
+              placeholder="Enter your Gemini API Key" 
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="flex-grow"
+            />
+            <Button onClick={handleSaveApiKey}>Save API Key</Button>
+          </div>
+
           <div>
             <h2 className="text-xl font-semibold mb-2 text-center">Choose your level:</h2>
             <LevelSelector

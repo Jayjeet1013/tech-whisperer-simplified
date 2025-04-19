@@ -26,10 +26,7 @@ export default function Index() {
 
   const handleExplain = async () => {
     if (!inputText.trim()) return
-    if (!localStorage.getItem('geminiApiKey')) {
-      toast.error("Please save your Gemini API key first")
-      return
-    }
+  
 
     setIsLoading(true)
     try {
@@ -65,16 +62,7 @@ export default function Index() {
         </div>
 
         <div className="space-y-8">
-          <div className="flex items-center space-x-4 mb-6">
-            <Input 
-              placeholder="Enter your Gemini API Key" 
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              className="flex-grow"
-            />
-            <Button onClick={handleSaveApiKey}>Save API Key</Button>
-          </div>
-
+         
           <div>
             <h2 className="text-xl font-semibold mb-2 text-center">Choose your level:</h2>
             <LevelSelector

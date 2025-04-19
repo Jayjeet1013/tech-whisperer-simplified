@@ -2,7 +2,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function getSimplifiedExplanation(text: string, level: string) {
-  const apiKey = localStorage.getItem('geminiApiKey');
+  const apiKey = 'AIzaSyCkOXNC6YpgPkLg6xunZ70ZuXRAFttpp3I';
   
   if (!apiKey) {
     throw new Error('API key not found. Please enter your Gemini API key.');
